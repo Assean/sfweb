@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>國文八年級第三次段考解釋單 專用網站</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- 引入 Lucide Icons (CDN) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        /* 3D 翻轉效果所需 CSS */
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        
+        /* 隱藏原生捲軸但保持可滾動 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* 動畫效果補充 (Tailwind CDN 預設不一定全包) */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(1rem); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideRight { from { opacity: 0; transform: translateX(1rem); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes bounce { 0%, 100% { transform: translateY(-25%); animation-timing-function: cubic-bezier(0.8,0,1,1); } 50% { transform: none; animation-timing-function: cubic-bezier(0,0,0.2,1); } }
+        
+        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        .animate-slide-up { animation: slideUp 0.4s ease-out forwards; }
+        .animate-slide-right { animation: slideRight 0.4s ease-out forwards; }
+        .animate-zoom-in { animation: zoomIn 0.3s ease-out forwards; }
+        .animate-bounce-custom { animation: bounce 1s infinite; }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 font-sans text-slate-800 pb-12">
+
+    <!-- 導覽列 -->
+    <nav class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-40">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <h1 class="text-lg sm:text-xl font-bold text-slate-800 tracking-wide truncate">
+                    📚 國文八年級第三次段考解釋單 專用網站
+                </h1>
+                <button onclick="openModal()" class="flex items-center px-3 py-1.5 sm:px-4 sm:py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-sm font-bold transition-colors shadow-sm ml-2 shrink-0">
+                    <i data-lucide="download" class="w-4 h-4 mr-0 sm:mr-2"></i>
+                    <span class="hidden sm:inline">下載講義</span>
+                    <span class="sm:hidden ml-1">下載</span>
+                </button>
+            </div>
+            
+            <!-- 模式切換 Tabs -->
+            <div class="flex space-x-1 sm:space-x-4 pb-2 overflow-x-auto no-scrollbar" id="tabs-container">
+                <button onclick="switchTab('list')" id="tab-list" class="tab-btn flex items-center px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors bg-indigo-100 text-indigo-700">
+                    <i data-lucide="book-open" class="w-4 h-4 mr-2"></i>單字清單
+                </button>
+                <button onclick="switchTab('flashcard')" id="tab-flashcard" class="tab-btn flex items-center px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors text-slate-500 hover:bg-slate-100">
+                    <i data-lucide="layers" class="w-4 h-4 mr-2"></i>翻轉字卡
+                </button>
+                <button onclick="switchTab('dictation')" id="tab-dictation" class="tab-btn flex items-center px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors text-slate-500 hover:bg-slate-100">
+                    <i data-lucide="pen-tool" class="w-4 h-4 mr-2"></i>默寫挑戰
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要內容區 -->
+    <main class="max-w-4xl mx-auto mt-8 px-4 sm:px-6 lg:px-8">
+        
+        <!-- 視圖 1: 單字清單 -->
+        <div id="view-list" class="view-section animate-slide-up">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">總複習清單</h2>
+                <button onclick="toggleAllDefs()" id="btn-toggle-defs" class="flex items-center text-sm bg-white border border-slate-300 px-3 py-1.5 rounded-lg shadow-sm hover:bg-slate-50 transition">
+                    <i data-lucide="eye-off" class="w-4 h-4 mr-2 hidden-icon"></i>
+                    <i data-lucide="eye" class="w-4 h-4 mr-2 shown-icon hidden"></i>
+                    <span id="text-toggle-defs">隱藏解釋 (自我測試)</span>
+                </button>
+            </div>
+            <div id="list-container" class="space-y-8">
+                <!-- 由 JS 動態生成內容 -->
+            </div>
+        </div>
+
+        <!-- 視圖 2: 翻轉字卡 -->
+        <div id="view-flashcard" class="view-section hidden animate-zoom-in flex flex-col items-center">
+            <div class="w-full max-w-lg mb-6">
+                <select id="fc-lesson-select" onchange="changeFcLesson()" class="w-full p-3 rounded-xl border border-slate-300 bg-white shadow-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <!-- 由 JS 生成選項 -->
+                </select>
+                <div class="mt-3 flex justify-between text-sm text-slate-500 px-2">
+                    <span>進度</span>
+                    <span id="fc-progress-text">1 / 8</span>
+                </div>
+                <div class="w-full h-1.5 bg-slate-200 rounded-full mt-1 overflow-hidden">
+                    <div id="fc-progress-bar" class="h-full bg-indigo-500 transition-all duration-300" style="width: 12.5%"></div>
+                </div>
+            </div>
+
+            <div class="relative w-full max-w-lg h-72 perspective-1000 cursor-pointer" onclick="flipCard()">
+                <div id="fc-card-inner" class="w-full h-full transition-transform duration-500 transform-style-3d">
+                    <!-- 正面 -->
+                    <div class="absolute inset-0 backface-hidden bg-white border-2 border-indigo-100 rounded-3xl shadow-xl flex flex-col items-center justify-center p-8 text-center">
+                        <span class="text-sm font-medium text-indigo-400 mb-4 tracking-widest uppercase">Click to flip</span>
+                        <div id="fc-pinyin" class="text-lg text-slate-400 mb-2 tracking-widest"></div>
+                        <h2 id="fc-term" class="text-4xl md:text-5xl font-bold text-slate-800"></h2>
+                    </div>
+                    <!-- 背面 -->
+                    <div id="fc-back-bg" class="absolute inset-0 backface-hidden bg-indigo-600 text-white rounded-3xl shadow-xl flex flex-col items-center justify-center p-8 text-center rotate-y-180">
+                        <span id="fc-back-label" class="text-sm font-medium text-indigo-300 mb-4 tracking-widest uppercase">Definition</span>
+                        <p id="fc-def" class="text-xl md:text-2xl font-medium leading-relaxed"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex space-x-6 mt-8">
+                <button onclick="prevCard()" id="fc-btn-prev" class="p-4 rounded-full bg-white shadow hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition">
+                    <i data-lucide="chevron-left" class="w-6 h-6 text-slate-700"></i>
+                </button>
+                <button onclick="flipCard()" class="p-4 rounded-full bg-slate-800 shadow hover:bg-slate-700 text-white transition flex items-center justify-center">
+                    <i data-lucide="rotate-cw" class="w-6 h-6"></i>
+                </button>
+                <button onclick="nextCard()" id="fc-btn-next" class="p-4 rounded-full bg-indigo-600 shadow-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition">
+                    <i data-lucide="chevron-right" class="w-6 h-6 text-white"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- 視圖 3: 默寫挑戰 -->
+        <div id="view-dictation" class="view-section hidden animate-slide-right max-w-3xl mx-auto">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
+                <div class="bg-slate-800 text-white px-6 py-4 flex justify-between items-center">
+                    <h2 class="text-xl font-bold flex items-center">
+                        <i data-lucide="pen-tool" class="w-5 h-5 mr-2 text-indigo-300"></i>
+                        實戰默寫：《陋室銘》
+                    </h2>
+                    <span id="dictation-score" class="hidden px-3 py-1 rounded-full text-sm font-bold bg-green-500"></span>
+                </div>
+
+                <div id="dictation-content" class="p-6 md:p-8 text-lg md:text-xl leading-loose md:leading-loose text-slate-700 tracking-wide">
+                    <!-- 由 JS 動態生成填空 -->
+                </div>
+
+                <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end space-x-4">
+                    <button onclick="resetDictation()" class="px-4 py-2 text-slate-600 font-medium hover:bg-slate-200 rounded-lg transition">重新測驗</button>
+                    <button onclick="checkDictation()" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-md transition flex items-center">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 mr-2"></i>批改答案
+                    </button>
+                </div>
+            </div>
+            
+            <div id="dictation-success" class="hidden mt-6 text-center text-green-600 font-bold text-lg animate-bounce-custom">
+                🎉 太棒了！你已經完全掌握《陋室銘》了！
+            </div>
+        </div>
+    </main>
+
+    <!-- 下載須知 Modal -->
+    <div id="downloadModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-zoom-in relative">
+            
+            <!-- Modal 標頭 -->
+            <div class="flex justify-between items-center p-4 sm:p-5 border-b border-slate-200 bg-slate-50">
+                <h3 id="modal-title-1" class="text-lg font-bold text-slate-800 flex items-center">
+                    <i data-lucide="download" class="w-5 h-5 mr-2 text-indigo-600"></i>下載講義
+                </h3>
+                <h3 id="modal-title-2" class="hidden text-lg font-bold text-slate-800 flex items-center">
+                    <i data-lucide="arrow-left" class="w-5 h-5 mr-2 text-slate-500 cursor-pointer hover:text-indigo-600 transition" onclick="setDownloadStep(1)"></i>選擇講義版本
+                </h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 transition-colors bg-white rounded-full p-1 shadow-sm">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <!-- Modal 內容: 步驟 1 (聲明) -->
+            <div id="modal-step-1" class="animate-slide-right">
+                <div class="p-5 sm:p-6 space-y-4 text-sm text-slate-600 overflow-y-auto max-h-[60vh] sm:max-h-[70vh]">
+                    <div>
+                        <h4 class="font-bold text-slate-800 mb-2 flex items-center"><span class="text-lg mr-2">📝</span> 下載須知</h4>
+                        <ul class="list-disc pl-6 space-y-1.5">
+                            <li>本講義將以 <span class="font-bold text-indigo-600">PDF 格式</span> 提供，建議儲存後列印。</li>
+                            <li>建議使用 A4 紙張雙面列印，以獲得最佳的閱讀體驗。</li>
+                            <li>實體紙本講義附有「易錯 Boss 區」，可供手寫加強記憶。</li>
+                        </ul>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <h4 class="font-bold text-slate-800 mb-2 flex items-center"><span class="text-lg mr-2">⚖️</span> 版權聲明</h4>
+                        <p class="leading-relaxed text-slate-500">本網站及講義內容僅供個人學習、複習與教育目的使用。請勿用於任何商業用途或未經授權的散布。</p>
+                    </div>
+                    <div class="bg-rose-50 p-4 rounded-xl border border-rose-200">
+                        <h4 class="font-bold text-rose-800 mb-2 flex items-center"><span class="text-lg mr-2">⚠️</span> 免責聲明</h4>
+                        <p class="leading-relaxed text-rose-600 font-medium">本工具僅供考前衝刺與實力養成。若將本講義用於考試作弊，被抓到請自行負責，本網站一概免責！</p>
+                    </div>
+                </div>
+                <div class="p-4 sm:p-5 border-t border-slate-200 flex justify-end space-x-3 bg-slate-50">
+                    <button onclick="closeModal()" class="px-4 py-2 text-slate-600 font-medium hover:bg-slate-200 rounded-lg transition text-sm sm:text-base">取消</button>
+                    <button onclick="setDownloadStep(2)" class="px-4 sm:px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-sm transition flex items-center text-sm sm:text-base">
+                        同意並繼續 <i data-lucide="chevron-right" class="w-4 h-4 ml-1"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal 內容: 步驟 2 (選擇版本) -->
+            <div id="modal-step-2" class="hidden animate-slide-right">
+                <div class="p-5 sm:p-6 space-y-4">
+                    <p class="text-slate-600 text-sm mb-2 text-center">請選擇最適合你的考前複習方式：</p>
+                    <!-- 完整版 -->
+                    <button onclick="handleDownload('full')" class="w-full text-left group bg-white border-2 border-slate-200 hover:border-indigo-500 hover:bg-indigo-50 rounded-xl p-4 transition-all duration-200 flex items-start">
+                        <div class="bg-indigo-100 p-3 rounded-lg mr-4 group-hover:bg-indigo-200 transition-colors">
+                            <i data-lucide="file-text" class="w-6 h-6 text-indigo-600"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-800 group-hover:text-indigo-800 mb-1">完整解釋單</h4>
+                            <p class="text-xs sm:text-sm text-slate-500">包含所有單字、注音與完整解釋，適合剛開始複習或對答案使用。</p>
+                        </div>
+                    </button>
+                    <!-- 空白版 -->
+                    <button onclick="handleDownload('blank')" class="w-full text-left group bg-white border-2 border-slate-200 hover:border-amber-500 hover:bg-amber-50 rounded-xl p-4 transition-all duration-200 flex items-start">
+                        <div class="bg-amber-100 p-3 rounded-lg mr-4 group-hover:bg-amber-200 transition-colors">
+                            <i data-lucide="file-question" class="w-6 h-6 text-amber-600"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-800 group-hover:text-amber-800 mb-1">空白解釋單 (自我測驗)</h4>
+                            <p class="text-xs sm:text-sm text-slate-500">解釋欄位挖空，適合考前最終衝刺、自我默寫測驗使用。</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- JavaScript 邏輯區 -->
+    <script>
+        // === 資料集 (Vocabulary Data) ===
+        const colorConfig = {
+            indigo: { bg: 'bg-indigo-50', text: 'text-indigo-800', border: 'border-indigo-100', main: 'bg-indigo-600' },
+            teal: { bg: 'bg-teal-50', text: 'text-teal-800', border: 'border-teal-100', main: 'bg-teal-600' },
+            amber: { bg: 'bg-amber-50', text: 'text-amber-800', border: 'border-amber-100', main: 'bg-amber-600' },
+            purple: { bg: 'bg-purple-50', text: 'text-purple-800', border: 'border-purple-100', main: 'bg-purple-600' }
+        };
+
+        const lessonsData = [
+            { id: 7, title: "第七課 陋室銘", color: "indigo", words: [
+                { term: "惟吾德馨", pinyin: "", def: "因為我的品德，使陋室的聲名像香氣一樣遠播。" },
+                { term: "苔痕上階綠", pinyin: "", def: "綠色的苔蘚長到臺階上。" },
+                { term: "草色入簾青", pinyin: "", def: "青翠的草色映入門簾。" },
+                { term: "鴻儒", pinyin: "ㄏㄨㄥˊ ㄖㄨˊ", def: "即大儒，指學問淵博的人。" },
+                { term: "白丁", pinyin: "", def: "不識字或缺乏知識的人。" },
+                { term: "金經", pinyin: "", def: "珍藏的書籍。" },
+                { term: "案牘", pinyin: "ㄢˋ ㄉㄨˊ", def: "公務文書。" },
+                { term: "勞形", pinyin: "", def: "使身體感到勞累。" }
+            ]},
+            { id: 8, title: "第八課 成功是失敗之母", color: "teal", words: [
+                { term: "老生常談", pinyin: "", def: "時常聽到，毫無新意的話。" },
+                { term: "盈虛消長", pinyin: "ㄧㄥˊ ㄒㄩ ㄒㄧㄠ ㄓㄤˇ", def: "盛衰的發展變化。" },
+                { term: "剝復循環", pinyin: "ㄅㄛ ㄈㄨˋ ㄒㄩㄣˊ ㄏㄨㄢˊ", def: "機運的盛衰變化不斷循環。" },
+                { term: "持盈保泰", pinyin: "", def: "維持既有的氣勢及成就。" },
+                { term: "金城", pinyin: "", def: "城池堅固。" },
+                { term: "銳意", pinyin: "", def: "意志堅決。" },
+                { term: "革弊去訛", pinyin: "ㄍㄜˊ ㄅㄧˋ ㄑㄩˋ ㄜˊ", def: "除去弊害、錯誤。" },
+                { term: "河清海晏", pinyin: "ㄏㄜˊ ㄑㄧㄥ ㄏㄞˇ ㄧㄢˋ", def: "太平盛世。晏，平靜、安和。" },
+                { term: "物殷俗阜", pinyin: "ㄨˋ ㄧㄣ ㄙㄨˊ ㄈㄡˋ", def: "物產豐盛，風俗淳厚。" },
+                { term: "砌", pinyin: "ㄑㄧˋ", def: "堆疊。" }
+            ]},
+            { id: 9, title: "第九課 罐頭由來", color: "amber", words: [
+                { term: "無產階級", pinyin: "", def: "被剝削的勞工階級。" },
+                { term: "就食於民", pinyin: "", def: "掠奪百姓的食物。" },
+                { term: "秋毫無犯", pinyin: "", def: "一點都不侵犯。" },
+                { term: "書而榜之", pinyin: "ㄕㄨ ㄦˊ ㄅㄤˇ ㄓ", def: "特別記載揭示，以表讚揚。" },
+                { term: "倒戈", pinyin: "ㄉㄠˇ ㄍㄜ", def: "軍隊叛變，反過來幫助敵方攻打自己陣營。" },
+                { term: "改弦更張", pinyin: "", def: "比喻改革變更，重新做起。" },
+                { term: "雛形", pinyin: "ㄔㄨˊ ㄒㄧㄥˊ", def: "事物初步發展的規模、形態。" }
+            ]},
+            { id: 10, title: "第十課 項鍊", color: "purple", words: [
+                { term: "寒傖", pinyin: "ㄏㄢˊ ㄘㄤ", def: "寒酸、不體面。" },
+                { term: "怒不可遏", pinyin: "ㄋㄨˋ ㄅㄨˋ ㄎㄜˇ ㄜˋ", def: "怒氣難以抑制的樣子。" },
+                { term: "支支吾吾", pinyin: "", def: "說話吞吞吐吐的樣子。" },
+                { term: "忐忑不安", pinyin: "ㄊㄢˇ ㄊㄜˋ ㄅㄨˋ ㄢ", def: "心情起伏不定的樣子。" },
+                { term: "阿諛", pinyin: "ㄜ ㄩˊ", def: "討好、諂媚。" }
+            ]}
+        ];
+
+        const dictationAnswers = [
+            "有仙則名", "有龍則靈", "惟吾德馨", "苔痕上階綠",
+            "鴻儒", "白丁", "素琴", "金經", "絲竹", "案牘",
+            "諸葛廬", "子雲亭", "何陋之有"
+        ];
+
+        // === 狀態變數 ===
+        let hideDefs = false;
+        let revealedIds = new Set();
+        let fcLessonIdx = 0;
+        let fcCardIdx = 0;
+        let fcIsFlipped = false;
+
+        // === 初始化與 Tab 切換 ===
+        function init() {
+            renderList();
+            initFlashcards();
+            initDictation();
+            lucide.createIcons();
+        }
+
+        function switchTab(tabId) {
+            // 更新按鈕樣式
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = "tab-btn flex items-center px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors text-slate-500 hover:bg-slate-100";
+            });
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            activeBtn.className = "tab-btn flex items-center px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors bg-indigo-100 text-indigo-700";
+
+            // 隱藏所有視圖，顯示選中視圖
+            document.querySelectorAll('.view-section').forEach(view => view.classList.add('hidden'));
+            const activeView = document.getElementById(`view-${tabId}`);
+            activeView.classList.remove('hidden');
+            
+            // 重新觸發動畫
+            activeView.style.animation = 'none';
+            activeView.offsetHeight; /* trigger reflow */
+            activeView.style.animation = null;
+        }
+
+        // === 單字清單模式 ===
+        function renderList() {
+            const container = document.getElementById('list-container');
+            let html = '';
+
+            lessonsData.forEach(lesson => {
+                const colors = colorConfig[lesson.color];
+                html += `
+                <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="px-5 py-3 ${colors.bg} border-b ${colors.border} flex items-center">
+                        <h3 class="text-lg font-bold ${colors.text}">${lesson.title}</h3>
+                    </div>
+                    <div class="divide-y divide-slate-100">
+                `;
+                
+                lesson.words.forEach((word, idx) => {
+                    const uniqueId = `${lesson.id}-${idx}`;
+                    const isHidden = hideDefs && !revealedIds.has(uniqueId);
+                    
+                    let defHTML = isHidden 
+                        ? `<div class="w-full h-full bg-slate-200 text-slate-400 rounded flex items-center justify-center py-1 text-sm select-none">點擊顯示解釋</div>`
+                        : `<p class="text-slate-600 leading-relaxed">${word.def}</p>`;
+
+                    html += `
+                    <div class="flex flex-col sm:flex-row p-4 transition duration-300 ${isHidden ? 'cursor-pointer hover:bg-slate-50' : ''}" 
+                         onclick="revealWord('${uniqueId}')" id="word-row-${uniqueId}">
+                        <div class="w-full sm:w-1/3 mb-2 sm:mb-0 shrink-0">
+                            <div class="font-bold text-lg text-slate-800 flex items-baseline">
+                                ${word.term}
+                                ${word.pinyin ? `<span class="ml-2 text-xs text-slate-500 font-normal tracking-widest">${word.pinyin}</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="w-full sm:w-2/3" id="word-def-${uniqueId}">
+                            ${defHTML}
+                        </div>
+                    </div>`;
+                });
+                html += `</div></section>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function toggleAllDefs() {
+            hideDefs = !hideDefs;
+            revealedIds.clear();
+            
+            const btnText = document.getElementById('text-toggle-defs');
+            const eyeIcon = document.querySelector('.shown-icon');
+            const eyeOffIcon = document.querySelector('.hidden-icon');
+
+            if(hideDefs) {
+                btnText.textContent = '顯示全部解釋';
+                eyeIcon.classList.remove('hidden');
+                eyeOffIcon.classList.add('hidden');
+            } else {
+                btnText.textContent = '隱藏解釋 (自我測試)';
+                eyeIcon.classList.add('hidden');
+                eyeOffIcon.classList.remove('hidden');
+            }
+            renderList();
+        }
+
+        function revealWord(uniqueId) {
+            if (hideDefs && !revealedIds.has(uniqueId)) {
+                revealedIds.add(uniqueId);
+                renderList();
+            }
+        }
+
+        // === 翻轉字卡模式 ===
+        function initFlashcards() {
+            const select = document.getElementById('fc-lesson-select');
+            select.innerHTML = lessonsData.map((l, idx) => `<option value="${idx}">${l.title}</option>`).join('');
+            updateFlashcardView();
+        }
+
+        function changeFcLesson() {
+            fcLessonIdx = parseInt(document.getElementById('fc-lesson-select').value);
+            fcCardIdx = 0;
+            if(fcIsFlipped) flipCard();
+            setTimeout(updateFlashcardView, fcIsFlipped ? 300 : 0);
+        }
+
+        function updateFlashcardView() {
+            const lesson = lessonsData[fcLessonIdx];
+            const word = lesson.words[fcCardIdx];
+            const total = lesson.words.length;
+            const colors = colorConfig[lesson.color];
+
+            // 更新內容
+            document.getElementById('fc-term').textContent = word.term;
+            document.getElementById('fc-pinyin').textContent = word.pinyin || '';
+            document.getElementById('fc-def').textContent = word.def;
+            
+            // 更新進度與按鈕狀態
+            document.getElementById('fc-progress-text').textContent = `${fcCardIdx + 1} / ${total}`;
+            document.getElementById('fc-progress-bar').style.width = `${((fcCardIdx + 1) / total) * 100}%`;
+            
+            document.getElementById('fc-btn-prev').disabled = (fcLessonIdx === 0 && fcCardIdx === 0);
+            document.getElementById('fc-btn-next').disabled = (fcLessonIdx === lessonsData.length - 1 && fcCardIdx === total - 1);
+
+            // 動態更新背面顏色
+            const backBg = document.getElementById('fc-back-bg');
+            const backLabel = document.getElementById('fc-back-label');
+            
+            // 移除舊顏色
+            backBg.className = backBg.className.replace(/bg-\w+-600/g, '');
+            backLabel.className = backLabel.className.replace(/text-\w+-300/g, '');
+            // 加入新顏色
+            backBg.classList.add(`bg-${lesson.color}-600`);
+            backLabel.classList.add(`text-${lesson.color}-300`);
+        }
+
+        function flipCard() {
+            fcIsFlipped = !fcIsFlipped;
+            const inner = document.getElementById('fc-card-inner');
+            if(fcIsFlipped) {
+                inner.classList.add('rotate-y-180');
+            } else {
+                inner.classList.remove('rotate-y-180');
+            }
+        }
+
+        function nextCard() {
+            if(fcIsFlipped) flipCard();
+            setTimeout(() => {
+                if (fcCardIdx < lessonsData[fcLessonIdx].words.length - 1) {
+                    fcCardIdx++;
+                } else if (fcLessonIdx < lessonsData.length - 1) {
+                    fcLessonIdx++;
+                    fcCardIdx = 0;
+                    document.getElementById('fc-lesson-select').value = fcLessonIdx;
+                }
+                updateFlashcardView();
+            }, 150);
+        }
+
+        function prevCard() {
+            if(fcIsFlipped) flipCard();
+            setTimeout(() => {
+                if (fcCardIdx > 0) {
+                    fcCardIdx--;
+                } else if (fcLessonIdx > 0) {
+                    fcLessonIdx--;
+                    fcCardIdx = lessonsData[fcLessonIdx].words.length - 1;
+                    document.getElementById('fc-lesson-select').value = fcLessonIdx;
+                }
+                updateFlashcardView();
+            }, 150);
+        }
+
+        // === 默寫挑戰模式 ===
+        function initDictation() {
+            let template = `
+            山不在高，{0|w-28}；水不在深，{1|w-28}。<br/>
+            斯是陋室，{2|w-28}。<br/>
+            {3|w-32}，草色入簾青。<br/>
+            談笑有{4|w-20}，往來無{5|w-20}。<br/>
+            可以調{6|w-20}，閱{7|w-20}。<br/>
+            無{8|w-20}之亂耳，無{9|w-20}之勞形。<br/>
+            南陽{10|w-24}，西蜀{11|w-24}。<br/>
+            孔子云：「{12|w-28}？」`;
+
+            let html = template.replace(/\{(\d+)\|([w\-\d]+)\}/g, (match, idx, width) => {
+                return `
+                <div class="inline-block relative">
+                    <input type="text" data-idx="${idx}" class="dictation-input inline-block ${width} mx-1 px-2 py-1 text-center font-bold border-b-2 bg-slate-50 focus:outline-none focus:bg-white border-slate-400 focus:border-indigo-500 text-indigo-700 transition-colors" placeholder="填空...">
+                    <div class="dictation-answer hidden absolute -top-8 left-0 w-full text-center text-xs font-bold text-red-500 whitespace-nowrap bg-white border border-red-200 px-1 rounded shadow-sm z-10">${dictationAnswers[idx]}</div>
+                </div>`;
+            });
+
+            document.getElementById('dictation-content').innerHTML = html;
+            
+            // 加入輸入改變時的事件 (隱藏結果)
+            document.querySelectorAll('.dictation-input').forEach(input => {
+                input.addEventListener('input', () => {
+                    if(!document.getElementById('dictation-score').classList.contains('hidden')) {
+                        clearDictationResults();
+                    }
+                });
+            });
+        }
+
+        function checkDictation() {
+            let correctCount = 0;
+            const inputs = document.querySelectorAll('.dictation-input');
+            
+            inputs.forEach(input => {
+                const idx = parseInt(input.getAttribute('data-idx'));
+                const val = input.value.trim();
+                const isCorrect = (val === dictationAnswers[idx]);
+                const answerTooltip = input.nextElementSibling;
+                
+                // 重置所有預設 class
+                input.className = `dictation-input inline-block mx-1 px-2 py-1 text-center font-bold border-b-2 focus:outline-none transition-colors ${Array.from(input.classList).find(c => c.startsWith('w-'))}`;
+                
+                if (isCorrect) {
+                    input.classList.add('border-green-500', 'text-green-700', 'bg-green-50');
+                    answerTooltip.classList.add('hidden');
+                    correctCount++;
+                } else {
+                    input.classList.add('border-red-500', 'text-red-600', 'bg-red-50');
+                    answerTooltip.classList.remove('hidden');
+                }
+            });
+
+            // 顯示分數
+            const scoreEl = document.getElementById('dictation-score');
+            scoreEl.textContent = `得分: ${Math.round((correctCount / 13) * 100)} 分`;
+            scoreEl.className = `px-3 py-1 rounded-full text-sm font-bold text-white ${correctCount === 13 ? 'bg-green-500' : 'bg-amber-500'}`;
+            scoreEl.classList.remove('hidden');
+
+            const successEl = document.getElementById('dictation-success');
+            if(correctCount === 13) {
+                successEl.classList.remove('hidden');
+            } else {
+                successEl.classList.add('hidden');
+            }
+        }
+
+        function clearDictationResults() {
+            document.getElementById('dictation-score').classList.add('hidden');
+            document.getElementById('dictation-success').classList.add('hidden');
+            
+            document.querySelectorAll('.dictation-input').forEach(input => {
+                const answerTooltip = input.nextElementSibling;
+                answerTooltip.classList.add('hidden');
+                input.className = `dictation-input inline-block mx-1 px-2 py-1 text-center font-bold border-b-2 bg-slate-50 focus:outline-none focus:bg-white border-slate-400 focus:border-indigo-500 text-indigo-700 transition-colors ${Array.from(input.classList).find(c => c.startsWith('w-'))}`;
+            });
+        }
+
+        function resetDictation() {
+            clearDictationResults();
+            document.querySelectorAll('.dictation-input').forEach(input => input.value = '');
+        }
+
+        // === Modal 下載視窗邏輯 ===
+        function openModal() {
+            document.getElementById('downloadModal').classList.remove('hidden');
+            setDownloadStep(1);
+        }
+
+        function closeModal() {
+            document.getElementById('downloadModal').classList.add('hidden');
+        }
+
+        function setDownloadStep(step) {
+            if(step === 1) {
+                document.getElementById('modal-step-1').classList.remove('hidden');
+                document.getElementById('modal-step-2').classList.add('hidden');
+                document.getElementById('modal-title-1').classList.remove('hidden');
+                document.getElementById('modal-title-2').classList.add('hidden');
+            } else {
+                document.getElementById('modal-step-1').classList.add('hidden');
+                document.getElementById('modal-step-2').classList.remove('hidden');
+                document.getElementById('modal-title-1').classList.add('hidden');
+                document.getElementById('modal-title-2').classList.remove('hidden');
+            }
+        }
+
+        function handleDownload(type) {
+            let url = '';
+            if (type === 'full') {
+                url = 'https://drive.google.com/file/d/1vnAUikI0mx28F5KTtPbsNpttjDMgdXQa/view?usp=drive_link';
+            } else if (type === 'blank') {
+                url = 'https://drive.google.com/file/d/17j8RK0ikXRXg29Qwq3TLIkcrMuntPxJD/view?usp=drive_link';
+            }
+            
+            if (url) {
+                window.open(url, '_blank'); // 在新分頁開啟下載連結
+            }
+            closeModal();
+        }
+
+        // === 啟動應用 ===
+        window.onload = init;
+
+    </script>
+</body>
+</html>
